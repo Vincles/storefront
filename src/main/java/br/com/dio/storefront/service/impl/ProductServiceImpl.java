@@ -6,10 +6,10 @@ import br.com.dio.storefront.entity.ProductEntity;
 import br.com.dio.storefront.mapper.IProductMapper;
 import br.com.dio.storefront.repository.ProductRepository;
 import br.com.dio.storefront.service.IProductService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -55,27 +55,33 @@ public class ProductServiceImpl implements IProductService {
     private ProductEntity findById(final UUID id){
         return repository.findById(id).orElseThrow();
     }
-
-    @CircuitBreaker(name = "warehouseService", fallbackMethod = "fallbackRequestAmount")
-    public BigDecimal requestCurrentAmount(final UUID id) {
-        var dto = warehouseClient.get()
-                .uri("/products/" + id)
-                .retrieve()
-                .body(ProductDetailDTO.class);
-        return dto.price();
-    }
     
-    public BigDecimal fallbackRequestAmount(final UUID id, final Throwable throwable) {
-        System.err.println("⚠️ Circuit Breaker aberto para o Warehouse! Motivo: " + throwable.getMessage());
-        return BigDecimal.ZERO; 
+    private BigDecimal requestCurrentAmount(final UUID id) {
+        try {
+            var dto = warehouseClient.get()
+                    .uri("/products/" + id)
+                    .retrieve()
+                    .body(ProductDetailDTO.class);
+            
+            return dto != null ? dto.price() : BigDecimal.ZERO;
+            
+        } catch (RestClientException e) {
+            System.err.println("⚠️ Falha ao conectar com o Warehouse para buscar o preço. Motivo: " + e.getMessage());
+            
+            return BigDecimal.ZERO; 
+        }
     }
 
     private void purchaseWarehouse(final UUID id){
-        var path = String.format("/products/%s/purchase", id);
-        warehouseClient.post()
-                .uri(path)
-                .retrieve()
-                .toBodilessEntity();
-    }
+        try {
+            var path = String.format("/products/%s/purchase", id);
+            warehouseClient.post()
+                    .uri(path)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientException e) {
+            System.err.println("⚠️ Não foi possível registrar a compra no Warehouse: " + e.getMessage());
 
+        }
+    }
 }
