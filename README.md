@@ -1,95 +1,33 @@
-<!--START_SECTION:header-->
-<div align="center">
-  <p align="center">
-    <img 
-      alt="DIO Education" 
-      src="https://raw.githubusercontent.com/digitalinnovationone/template-github-trilha/main/.github/assets/logo.webp" 
-      width="100px" 
-    />
-    <h1>Storefront</h1>
-  </p>
-</div>
-<!--END_SECTION:header-->
+# Arquitetura de Microsserviços - Vitrine (Storefront) & Armazém (Warehouse)
 
-<p align="center">
-  <img src="https://img.shields.io/static/v1?label=DIO&message=Education&color=E94D5F&labelColor=202024" alt="DIO Project" />
-  <a href="NIVEL"><img  src="https://img.shields.io/static/v1?label=Nivel&message=Basico&color=E94D5F&labelColor=202024" alt="Nivel"></a>
+Este projeto foi desenvolvido como o desafio final do Bootcamp da [DIO (Digital Innovation One)](https://www.dio.me/). O objetivo principal é construir uma arquitetura de microsserviços em Java, demonstrando a integração, comunicação e resiliência entre diferentes componentes de um ecossistema de e-commerce.
 
-</p>
+## 🧱 Estrutura do Projeto
 
-<!--  -->
-<table align="center">
-<thead>
-  <tr>
-    <td>
-        <p align="center">Expert</p>
-        <a href="https://github.com/juniorjrjl">
-        <img src="https://avatars.githubusercontent.com/u/6619093?u=0afe982a654793dfc9e886acab8b417aa632f511&v=4" alt="@felipeAguiarCode"><br>
-      </a>
-    </td>
-    <td colspan="3">
-    <p>🎉 10y+ em desenvolvimento Backend (Principalmente com Java mas já atuei com Scala, Python, Kotlin).
-      <br/>
-     🌟 Desenvolvedor backend - CAJU
-      <br/>
-    👨‍💻 Foco em back-ends
-    </p>
-      <a 
-      href="https://www.linkedin.com/in/josé-luiz-abreu-cardoso-junior-18483872/" 
-      align="center">
-           <img 
-            align="center" 
-            alt="Material de Apoio" 
-            src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white"
-            >
-        </a>
-        <a href="https://www.instagram.com/junior.jose.lz/" target="_blank">
-            <img 
-              align="center" 
-              alt="Instagram" 
-              src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white"
-            >
-        </a>
-    </td>
-  </tr>
-</thead>
-</table>
-<!--  -->
+O sistema é dividido em dois componentes principais que interagem entre si:
 
-<br/>
-<br/>
+* **Storefront (Vitrine):** Um microsserviço desenvolvido em **Java com Spring Boot 3**. Ele gerencia os produtos ativos na vitrine, lida com as requisições dos clientes e consulta o ecossistema para obter dados atualizados de preço e estoque.
+* **Warehouse (Armazém):** Um utilitário/biblioteca desenvolvido em **Java Puro (gerenciado via Gradle)** que simula as operações de estoque, armazenamento e logística do ecossistema.
 
-## 💻 Sobre o Projeto
+---
 
-Vamos criar um sistema de e-commerce para estudar sobre a comunicação de microsserviços 
+## 🚀 Melhorias Implementadas
 
-## 📚 Pré-requisitos de Habilidades e Níveis de Conhecimento
+Foi implementada a seguinte melhoria no microsserviço **Storefront**:
 
-Antes de ingressar neste conteúdo, é necessário possuir conhecimento prévio nas seguintes áreas:
+### Tratamento de Falhas e Degradação Graciosa (*Graceful Degradation*)
+* **O problema:** Originalmente, se o componente `warehouse` ficasse fora do ar, estivesse em manutenção ou sofresse com alta latência, a chamada síncrona do `RestClient` quebrava. Isso gerava um erro `500 Internal Server Error`, derrubando a vitrine inteira e impedindo o usuário de navegar pelos produtos.
+* **A solução:** Na classe `ProductServiceImpl`, as requisições HTTP foram envolvidas em blocos de tratamento robustos utilizando a captura da exceção `RestClientException`.
+* **O benefício:** Caso o `warehouse` fique inacessível, o sistema captura a falha de forma elegante, gera um log de alerta no console do servidor e aplica uma "degradação graciosa", assumindo um preço padrão (`BigDecimal.ZERO`). Isso impede o efeito cascata, mantém a aplicação `storefront` 100% online e preserva a experiência do usuário.
 
-- Java | Intermediário
-- Orientação a Objeto | Avançado
-- Spring | Intermediário
-- REST API | Intermediário
+---
 
-## 🛠️ Habilidades e Sub-habilidades que vamos aprender neste conteúdo
+## 🛠️ Tecnologias Utilizadas
 
-- Comunicação síncrona
-- Comunicação assíncrona
+* **Java 17 / 21**
+* **Spring Boot 3.x** (Web, Data JPA)
+* **Gradle & Maven** (Gerenciadores de dependências)
+* **RabbitMQ** (Mensageria AMQP)
+* **Lombok** (Produtividade no código)
 
-## 🎯 Objetivos e Resultados Esperados
-
-Após a conclusão do curso/projeto, os estudantes estarão aptos a:
-
-- Entender as diferenças de comunicação sincrona e assincrona na criação de microsserviços.
-
-<!--START_SECTION:footer-->
-
-<br />
-<br />
-
-<p align="center">
-  <a href="https://www.dio.me/" target="_blank">
-    <img align="center" src="https://raw.githubusercontent.com/digitalinnovationone/template-github-trilha/main/.github/assets/footer.png" alt="banner"/>
-  </a>
-</p>
+---
