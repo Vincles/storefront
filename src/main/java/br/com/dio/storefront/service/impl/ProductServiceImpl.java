@@ -6,6 +6,7 @@ import br.com.dio.storefront.entity.ProductEntity;
 import br.com.dio.storefront.mapper.IProductMapper;
 import br.com.dio.storefront.repository.ProductRepository;
 import br.com.dio.storefront.service.IProductService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -55,12 +56,18 @@ public class ProductServiceImpl implements IProductService {
         return repository.findById(id).orElseThrow();
     }
 
-    private BigDecimal requestCurrentAmount(final UUID id) {
+    @CircuitBreaker(name = "warehouseService", fallbackMethod = "fallbackRequestAmount")
+    public BigDecimal requestCurrentAmount(final UUID id) {
         var dto = warehouseClient.get()
                 .uri("/products/" + id)
                 .retrieve()
                 .body(ProductDetailDTO.class);
         return dto.price();
+    }
+    
+    public BigDecimal fallbackRequestAmount(final UUID id, final Throwable throwable) {
+        System.err.println("⚠️ Circuit Breaker aberto para o Warehouse! Motivo: " + throwable.getMessage());
+        return BigDecimal.ZERO; 
     }
 
     private void purchaseWarehouse(final UUID id){
